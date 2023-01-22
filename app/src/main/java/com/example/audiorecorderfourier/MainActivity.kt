@@ -1,6 +1,7 @@
 package com.example.audiorecorderfourier
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.*
@@ -78,6 +79,10 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             }
 
             vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+        }
+
+        btnList.setOnClickListener {
+            startActivity(Intent(this, GalleryActivity::class.java))
         }
 
         btnDone.setOnClickListener{
