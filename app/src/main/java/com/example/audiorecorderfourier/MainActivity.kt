@@ -1,9 +1,12 @@
 package com.example.audiorecorderfourier
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
@@ -23,6 +26,8 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     private var isRecording = false
     private var isPaused = false
 
+    private lateinit var vibrator: Vibrator
+
     private lateinit var timer: Timer
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +39,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE)
 
         timer = Timer(this)
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
         btnRecord.setOnClickListener{
             when{
@@ -41,6 +47,8 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
                 isRecording -> pauseRecorder()
                 else -> startRecording()
             }
+
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         }
     }
 
@@ -109,6 +117,6 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     }
 
     override fun onTimerTick(duration: String) {
-        println(duration)
+        tvTimer.text = duration
     }
 }
