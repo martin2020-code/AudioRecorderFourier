@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
     private var isRecording = false
     private var isPaused = false
 
+    private var duration = ""
+
     private lateinit var vibrator: Vibrator
 
     private lateinit var timer: Timer
@@ -118,5 +120,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
     override fun onTimerTick(duration: String) {
         tvTimer.text = duration
+        this.duration = duration.dropLast(3)
+        waveformView.addAmplitude(recorder.maxAmplitude.toFloat())
     }
 }

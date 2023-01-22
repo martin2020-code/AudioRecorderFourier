@@ -12,9 +12,16 @@
         android:layout_height="wrap_content"
         android:text="00:00.00"
         android:textSize="56sp"
+        app:layout_constraintBottom_toTopOf="@+id/waveformView"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginBottom="30dp" />
+
+    <com.example.audiorecorderfourier.WaveformView
+        android:id="@+id/waveformView"
+        android:layout_width="match_parent"
+        android:layout_height="400px"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
