@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.Date
 
-class Adapter(var records : List<AudioRecord>) : RecyclerView.Adapter<Adapter.ViewHolder>() {
+class Adapter(var records : ArrayList<AudioRecord>) : RecyclerView.Adapter<Adapter.ViewHolder>() {
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         var tvFilename : TextView = itemView.findViewById(R.id.tvFilename)
         var tvMeta : TextView = itemView.findViewById(R.id.tvMeta)
