@@ -31,6 +31,7 @@
             android:text="test"/>
 
         <TextView
+            android:id="@+id/tvMeta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
