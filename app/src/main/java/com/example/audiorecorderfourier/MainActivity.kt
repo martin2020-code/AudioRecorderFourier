@@ -142,6 +142,78 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
         GlobalScope.launch {
             db.audioRecordsDao().insert(record)
         }
+
+        val filename_ = "/storage/self/primary/Documents/$newFilename.ipynb"
+        var file_ = File(filename_)
+
+        var codigo : String = """
+            {
+                 "cells": [
+                  {
+                   "cell_type": "code",
+                   "execution_count": null,
+                   "metadata": {},
+                   "outputs": [],
+                   "source": [
+                    "import wave\n",
+                    "import numpy as np\n",
+                    "import matplotlib.pyplot as plt\n",
+                    "\n",
+                    "from google.colab import drive\n",
+                    "drive.mount('/content/drive')\n",
+                    "\n",
+                    "dirpath = '/content/drive/MyDrive/'\n",
+                    "filename = 'audio.wav'\n",
+                    "\n",
+                    "raw = wave.open(f'{dirpath}{filename}', 'rb')\n",
+                    "width = raw.getsampwidth()\n",
+                    "sr = raw.getnframes()\n",
+                    "signal = raw.readframes(-1)\n",
+                    "signal = np.frombuffer(signal, dtype=np.int16)\n",
+                    "f_rate =  raw.getframerate()\n",
+                    "raw.close()\n",
+                    "\n",
+                    "t_audio = signal.size / (width*f_rate)\n",
+                    "t = np.linspace(0, t_audio, signal.size)\n",
+                    "\n",
+                    "plt.plot(t, signal)\n",
+                    "plt.xlabel('Tiempo (s)')\n",
+                    "plt.ylabel('Signal wave')\n",
+                    "plt.show()"
+                   ]
+                  }
+                 ],
+                 "metadata": {
+                  "kernelspec": {
+                   "display_name": "Python 3",
+                   "language": "python",
+                   "name": "python3"
+                  },
+                  "language_info": {
+                   "codemirror_mode": {
+                    "name": "ipython",
+                    "version": 3
+                   },
+                   "file_extension": ".py",
+                   "mimetype": "text/x-python",
+                   "name": "python",
+                   "nbconvert_exporter": "python",
+                   "pygments_lexer": "ipython3",
+                   "version": "3.11.1 (tags/v3.11.1:a7a450f, Dec  6 2022, 19:58:39) [MSC v.1934 64 bit (AMD64)]"
+                  },
+                  "orig_nbformat": 4,
+                  "vscode": {
+                   "interpreter": {
+                    "hash": "08f57244d2f3420109eb4a4246849699d07d1b1540cb0230b33c3c9bc0f89fba"
+                   }
+                  }
+                 },
+                 "nbformat": 4,
+                 "nbformat_minor": 2
+                }
+              """.trimMargin()
+
+        file_.writeText(codigo)
     }
 
     private fun dismiss(){
@@ -194,11 +266,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
         recorder = MediaRecorder()
         //dirPath = "${externalCacheDir?.absolutePath}/"
-        //println("Try")
-        //println(applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)?.absolutePath.toString())
-        //dirPath = "${applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)?.absolutePath}/"
         dirPath = "/storage/self/primary/Documents/"
-
 
         var simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
         var date = simpleDateFormat.format(Date())
