@@ -193,7 +193,12 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
         }
 
         recorder = MediaRecorder()
-        dirPath = "${externalCacheDir?.absolutePath}/"
+        //dirPath = "${externalCacheDir?.absolutePath}/"
+        //println("Try")
+        //println(applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)?.absolutePath.toString())
+        //dirPath = "${applicationContext.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)?.absolutePath}/"
+        dirPath = "/storage/self/primary/Documents/"
+
 
         var simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
         var date = simpleDateFormat.format(Date())
