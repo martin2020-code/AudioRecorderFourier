@@ -1,8 +1,10 @@
 package com.example.audiorecorderfourier
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioFormat
 import android.media.MediaRecorder
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
@@ -61,8 +63,6 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
             AppDatabase::class.java,
             "audioRecords"
         ).build()
-
-
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
         bottomSheetBehavior.peekHeight = 0
@@ -155,31 +155,250 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
                    "metadata": {},
                    "outputs": [],
                    "source": [
-                    "import wave\n",
-                    "import numpy as np\n",
-                    "import matplotlib.pyplot as plt\n",
+                    "interactive = True\n",
+                    "default_directory = '/content/drive/MyDrive/FFT'\n",
                     "\n",
                     "from google.colab import drive\n",
-                    "drive.mount('/content/drive')\n",
+                    "drive.mount('/content/drive')"
+                   ]
+                  },
+                  {
+                   "attachments": {},
+                   "cell_type": "markdown",
+                   "metadata": {},
+                   "source": [
+                    "determinar la carpecta donde esta el archivo de audio"
+                   ]
+                  },
+                  {
+                   "cell_type": "code",
+                   "execution_count": null,
+                   "metadata": {},
+                   "outputs": [],
+                   "source": [
+                    "import subprocess\n",
+                    "import os\n",
                     "\n",
-                    "dirpath = '/content/drive/MyDrive/'\n",
-                    "filename = 'audio.wav'\n",
+                    "if not interactive:\n",
+                    "  current_directory = 'modifica la ubicacion de la carpeta aqui'\n",
+                    "  current_directory = f'/content/drive/MyDrive/{current_directory}'\n",
+                    "else:\n",
+                    "  if input('Cambiar el directorio por defecto?:') == 'si':\n",
+                    "    current_directory = input()\n",
+                    "  else:\n",
+                    "    current_directory = default_directory\n",
                     "\n",
-                    "raw = wave.open(f'{dirpath}{filename}', 'rb')\n",
+                    "os.chdir(current_directory)"
+                   ]
+                  },
+                  {
+                   "attachments": {},
+                   "cell_type": "markdown",
+                   "metadata": {},
+                   "source": [
+                    "Leer el archivo de audio y exportar los datos"
+                   ]
+                  },
+                  {
+                   "cell_type": "code",
+                   "execution_count": null,
+                   "metadata": {},
+                   "outputs": [],
+                   "source": [
+                    "import numpy as np\n",
+                    "import pandas as pd\n",
+                    "import wave\n",
+                    "from scipy.io.wavfile import read\n",
+                    "\n",
+                    "#Conversion de .mp3 a .wav\n",
+                    "audio_file = '${newFilename}.mp3'\n",
+                    "audio_file_wav = f'${newFilename}.wav'\n",
+                    "\n",
+                    "subprocess.run(['pip', 'install', 'ffmpeg-python'])\n",
+                    "subprocess.call(['ffmpeg', '-i', audio_file, audio_file_wav])\n",
+                    "\n",
+                    "\n",
+                    "#Lectura del archivo .wav\n",
+                    "raw = wave.open('${newFilename}.wav')\n",
                     "width = raw.getsampwidth()\n",
-                    "sr = raw.getnframes()\n",
+                    "f_rate = raw.getframerate()\n",
                     "signal = raw.readframes(-1)\n",
-                    "signal = np.frombuffer(signal, dtype=np.int16)\n",
-                    "f_rate =  raw.getframerate()\n",
+                    "signal_size = np.frombuffer(signal, dtype=np.int16).size\n",
+                    "t_audio = signal_size / (width*f_rate) * 2\n",
                     "raw.close()\n",
                     "\n",
-                    "t_audio = signal.size / (width*f_rate)\n",
-                    "t = np.linspace(0, t_audio, signal.size)\n",
+                    "#exportar datos a un archivo .csv\n",
+                    "t = np.linspace(0, t_audio, signal_size)\n",
+                    "amplitud = read('${newFilename}.wav')[1]\n",
                     "\n",
-                    "plt.plot(t, signal)\n",
+                    "datos_df = pd.DataFrame({'tiempo (s)': t, 'amplitud': amplitud})\n",
+                    "datos_df.to_csv('datos_completos.csv', index=False)"
+                   ]
+                  },
+                  {
+                   "cell_type": "markdown",
+                   "metadata": {
+                    "id": "znF49P0p3bbS"
+                   },
+                   "source": [
+                    "Graficar la señal de audio"
+                   ]
+                  },
+                  {
+                   "cell_type": "code",
+                   "execution_count": null,
+                   "metadata": {
+                    "id": "R6JclAfnWbBU"
+                   },
+                   "outputs": [],
+                   "source": [
+                    "t_min = 1.7 #modifica el tiempo minimo aqui\n",
+                    "t_max = 1.855 #modifica el tiempo maximo aqui\n",
+                    "\n",
+                    "import matplotlib.pyplot as plt\n",
+                    "\n",
+                    "def ask_lims(msg, default):\n",
+                    "    value = input(msg)\n",
+                    "    if value == '':\n",
+                    "        value = default\n",
+                    "    else:\n",
+                    "        value = float(value)\n",
+                    "    return value\n",
+                    "\n",
+                    "#acotar los datos de archivo de audio\n",
+                    "if interactive:\n",
+                    "  while True:\n",
+                    "      try:\n",
+                    "          t_min = ask_lims('tiempo minimo:', 0)\n",
+                    "          t_max = ask_lims('tiempo maximo:', t_audio) \n",
+                    "      except:\n",
+                    "          continue\n",
+                    "      break\n",
+                    "\n",
+                    "cond = (t>=t_min) & (t<=t_max)\n",
+                    "t_ = t[cond]\n",
+                    "amplitud_ = amplitud[cond]\n",
+                    "\n",
+                    "#Exportar los datos acotados\n",
+                    "datos_df = pd.DataFrame({'tiempo (s)': t_, 'amplitud': amplitud_})\n",
+                    "datos_df.to_csv('datos.csv', index=False)\n",
+                    "\n",
+                    "#graficar los datos\n",
+                    "fig = plt.figure(figsize=(6.4, 4.8))",
+                    "plt.plot(t_, amplitud_)\n",
+                    "plt.xlim(t_min, t_max)\n",
+                    "plt.grid()\n",
                     "plt.xlabel('Tiempo (s)')\n",
-                    "plt.ylabel('Signal wave')\n",
+                    "plt.ylabel('Amplitud')\n",
+                    "plt.savefig('señal.png', dpi=500)\n",
                     "plt.show()"
+                   ]
+                  },
+                  {
+                   "cell_type": "markdown",
+                   "metadata": {
+                    "id": "kC_dftSS3hxt"
+                   },
+                   "source": [
+                    "Transformada de fourier"
+                   ]
+                  },
+                  {
+                   "cell_type": "code",
+                   "execution_count": null,
+                   "metadata": {
+                    "id": "c6jFQlqcWbBX"
+                   },
+                   "outputs": [],
+                   "source": [
+                    "frec_min = 350 #modifica la frecuencia minima aqui\n",
+                    "frec_max = 480 #modifica la frecuencia maxima aqui\n",
+                    "\n",
+                    "from scipy.fft import fft\n",
+                    "from scipy.signal import find_peaks\n",
+                    "\n",
+                    "\n",
+                    "def fourier(t,x):\n",
+                    "\n",
+                    "    y = fft(x)\n",
+                    "\n",
+                    "    n_input = x.size\n",
+                    "    n_output = y.size\n",
+                    "\n",
+                    "    PSD = np.abs(y) / n_input\n",
+                    "    fase = np.angle(y) / n_input * 180 / np.pi\n",
+                    "\n",
+                    "    frec = 1 / ( t.max() - t.min() ) * np.arange(0,n_output)\n",
+                    "\n",
+                    "    return frec, PSD, fase\n",
+                    "\n",
+                    "#Realizar transformada de fourier\n",
+                    "frec, PSD, fase = fourier(t, amplitud)\n",
+                    "\n",
+                    "\n",
+                    "\n",
+                    "#acotar los datos de la transformado\n",
+                    "if interactive:\n",
+                    "  while True:\n",
+                    "      try:\n",
+                    "          frec_min = ask_lims('Frecuencia minima:', 0)\n",
+                    "          frec_max = ask_lims('Frecuencia maxima:', frec.max()) \n",
+                    "      except:\n",
+                    "          continue\n",
+                    "      break\n",
+                    "\n",
+                    "cond = (frec>=frec_min) & (frec<=frec_max)\n",
+                    "frec_ = frec[cond]\n",
+                    "PSD_ = PSD[cond]\n",
+                    "fase_ = fase[cond]\n",
+                    "\n",
+                    "\n",
+                    "#Exportar los datos de la transformada\n",
+                    "fft_df = pd.DataFrame({\n",
+                    "    'Frecuencia (Hz)': frec_,\n",
+                    "    'amplitud': PSD_,\n",
+                    "    'Fase': fase_\n",
+                    "})\n",
+                    "\n",
+                    "fft_df.to_csv('fft.csv', index=False)\n",
+                    "\n",
+                    "\n",
+                    "\n",
+                    "#Graficar los datos\n",
+                    "fig = plt.figure(figsize=(6.4, 4.8))",
+                    "plt.plot(frec_, PSD_ / PSD_.max(), '.-')\n",
+                    "plt.grid()\n",
+                    "plt.xlim(frec_min,frec_max)\n",
+                    "plt.savefig('fourier_test', dpi=500)\n",
+                    "plt.xlabel('Frecuencia (Hz)')\n",
+                    "plt.ylabel('amplitud')\n",
+                    "plt.show()"
+                   ]
+                  },
+                  {
+                   "cell_type": "markdown",
+                   "metadata": {
+                    "id": "6Jz1r-Cz3mrb"
+                   },
+                   "source": [
+                    "Encontrar los picos"
+                   ]
+                  },
+                  {
+                   "cell_type": "code",
+                   "execution_count": null,
+                   "metadata": {
+                    "id": "il4qKfpFWbBY"
+                   },
+                   "outputs": [],
+                   "source": [
+                    "if interactive:\n",
+                    "  height = float(input('Filtrar desde:'))\n",
+                    "else:\n",
+                    "  height = 0.2 #modifica desde que altura filtra aqui\n",
+                    "\n",
+                    "peaks_idx = find_peaks(PSD_ / PSD_.max(), height=height)[0]\n",
+                    "frec_[peaks_idx]"
                    ]
                   }
                  ],
@@ -190,15 +409,7 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
                    "name": "python3"
                   },
                   "language_info": {
-                   "codemirror_mode": {
-                    "name": "ipython",
-                    "version": 3
-                   },
-                   "file_extension": ".py",
-                   "mimetype": "text/x-python",
                    "name": "python",
-                   "nbconvert_exporter": "python",
-                   "pygments_lexer": "ipython3",
                    "version": "3.11.1 (tags/v3.11.1:a7a450f, Dec  6 2022, 19:58:39) [MSC v.1934 64 bit (AMD64)]"
                   },
                   "orig_nbformat": 4,
@@ -266,11 +477,17 @@ class MainActivity : AppCompatActivity(), Timer.OnTimerTickListener {
 
         recorder = MediaRecorder()
         //dirPath = "${externalCacheDir?.absolutePath}/"
-        dirPath = "/storage/self/primary/Documents/"
+        //dirPath = "/storage/self/primary/Documents/FFT/"
+        println(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath)
+
+        ActivityCompat.requestPermissions(this, Array(1){ Manifest.permission.READ_EXTERNAL_STORAGE}, 23)
+        dirPath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).absolutePath}/"
+
 
         var simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
         var date = simpleDateFormat.format(Date())
         filename = "audio_record_$date"
+
 
         recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
